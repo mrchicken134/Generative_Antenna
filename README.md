@@ -27,7 +27,7 @@
 
 ## 快速开始
 
-安装依赖（使用本机 `DeepLearning` 环境）：
+安装依赖：
 
 ```bash
 D:\Anaconda3\envs\DeepLearning\python.exe -m pip install -r requirements.txt
