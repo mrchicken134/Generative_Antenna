@@ -1,0 +1,7 @@
+Generator: 			deconvolution layers with output channels 256 -> 128 -> 64 -> N.
+Discriminator: 		CNN backbone with channels 64 -> 128 -> 256 -> 512 -> N, then scalar real/fake output.
+Input condition:
+	Generator input is concatenation of desired transmission response vector (M) and random noise (R).
+	Noise is sampled from a uniform distribution.
+Training objective: 	standard GAN minimax with BCE implementation.
+Optimizer: 			Adam, default learning rate 2e-4.
