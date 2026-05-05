@@ -37,7 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num_workers", type=int, default=0, help="DataLoader 进程数。")
 
     parser.add_argument("--out_dir", type=str, default="outputs", help="输出目录。")
-    parser.add_argument("--save_every", type=int, default=20, help="每隔多少轮保存一次 checkpoint。")
+    parser.add_argument("--save_every", type=int, default=20, help="每隔多少轮保存一次checkpoint。")
     parser.add_argument("--sample_every", type=int, default=10, help="每隔多少轮导出一次生成样本。")
     parser.add_argument("--sample_count", type=int, default=16, help="每次导出的样本数量。")
     return parser.parse_args()
