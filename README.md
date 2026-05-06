@@ -30,31 +30,31 @@
 安装依赖：
 
 ```bash
-D:\Anaconda3\envs\DeepLearning\python.exe -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 使用真实数据训练：
 
 ```bash
-D:\Anaconda3\envs\DeepLearning\python.exe train.py --dataset_npz your_dataset.npz --condition_dim 64 --noise_dim 32 --geometry_channels 4 --image_size 32 --epochs 200
+python train.py --dataset_npz your_dataset.npz --condition_dim 64 --noise_dim 32 --geometry_channels 4 --image_size 32 --epochs 200
 ```
 
 使用合成数据训练（流程自检）：
 
 ```bash
-D:\Anaconda3\envs\DeepLearning\python.exe train.py --use_synthetic_if_missing --condition_dim 64 --noise_dim 32 --geometry_channels 4 --image_size 32 --epochs 50
+python train.py --use_synthetic_if_missing --condition_dim 64 --noise_dim 32 --geometry_channels 4 --image_size 32 --epochs 50
 ```
 
 从 checkpoint 采样几何矩阵：
 
 ```bash
-D:\Anaconda3\envs\DeepLearning\python.exe sample.py --ckpt outputs/ckpt_epoch_0200.pt --num_samples 8 --output_path outputs/generated.npy
+python sample.py --ckpt outputs/ckpt_epoch_0200.pt --num_samples 8 --output_path outputs/generated.npy
 ```
 
 使用自定义目标响应向量采样（`.npy` 形状 `[K, M]`）：
 
 ```bash
-D:\Anaconda3\envs\DeepLearning\python.exe sample.py --ckpt outputs/ckpt_epoch_0200.pt --condition_path your_conditions.npy --output_path outputs/generated_from_condition.npy
+python sample.py --ckpt outputs/ckpt_epoch_0200.pt --condition_path your_conditions.npy --output_path outputs/generated_from_condition.npy
 ```
 
 ## 已同步环境版本

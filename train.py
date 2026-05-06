@@ -13,6 +13,8 @@ from models import Discriminator, Generator
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="训练用于多层超构单元生成的 cDCGAN。")
+
+    #输入输出路径 必填
     parser.add_argument("--dataset_npz", type=str, default="", help="真实数据集 npz 文件路径。")
     parser.add_argument(
         "--use_synthetic_if_missing",
@@ -21,6 +23,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--synthetic_path", type=str, default="synthetic_metacell.npz", help="合成数据保存路径。")
 
+    #天线参数
     parser.add_argument("--condition_dim", type=int, default=64, help="M：目标透射响应向量维度。")
     parser.add_argument("--noise_dim", type=int, default=32, help="R：随机噪声向量维度。")
     parser.add_argument("--geometry_channels", type=int, default=4, help="N：几何图案通道数。")
@@ -28,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--freq_min", type=float, default=8.0, help="目标频段下限（用于实验记录）。")
     parser.add_argument("--freq_max", type=float, default=12.0, help="目标频段上限（用于实验记录）。")
 
+    #超参数
     parser.add_argument("--epochs", type=int, default=200, help="训练轮数。")
     parser.add_argument("--batch_size", type=int, default=64, help="批大小。")
     parser.add_argument("--lr", type=float, default=2e-4, help="Adam 学习率。")
@@ -36,6 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42, help="随机种子。")
     parser.add_argument("--num_workers", type=int, default=0, help="DataLoader 进程数。")
 
+    #输出参数
     parser.add_argument("--out_dir", type=str, default="outputs", help="输出目录。")
     parser.add_argument("--save_every", type=int, default=20, help="每隔多少轮保存一次checkpoint。")
     parser.add_argument("--sample_every", type=int, default=10, help="每隔多少轮导出一次生成样本。")
@@ -43,7 +48,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def seed_everything(seed: int) -> None:
+def seed_everything(seed: int) -> None:  #固定种子
     np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
