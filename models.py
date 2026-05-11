@@ -6,7 +6,7 @@ from metacell import PAPER_QUARTER_SIZE
 
 def _generator_layers(in_channels: int, out_channels: int, image_size: int) -> nn.Sequential:
     if image_size == PAPER_QUARTER_SIZE:
-        # 1 -> 3 -> 7 -> 15 -> 15, preserving the paper's 256/128/64/N channel plan.
+        # 空间尺寸从 1 放大到 15，通道数按论文的 256/128/64/N 来走。
         return nn.Sequential(
             nn.ConvTranspose2d(in_channels, 256, kernel_size=3, stride=1, padding=0, bias=False),
             nn.BatchNorm2d(256),
@@ -36,7 +36,7 @@ def _generator_layers(in_channels: int, out_channels: int, image_size: int) -> n
             nn.Sigmoid(),
         )
 
-    raise ValueError("Generator supports image_size=15 for the paper setup or image_size=32 for legacy runs.")
+    raise ValueError("生成器目前支持 image_size=15 的论文配置，或 image_size=32 的旧版配置。")
 
 
 def _discriminator_layers(in_channels: int, geometry_channels: int, image_size: int) -> nn.Sequential:
@@ -78,15 +78,14 @@ def _discriminator_layers(in_channels: int, geometry_channels: int, image_size: 
             nn.LeakyReLU(0.2, inplace=True),
         )
 
-    raise ValueError("Discriminator supports image_size=15 for the paper setup or image_size=32 for legacy runs.")
+    raise ValueError("判别器目前支持 image_size=15 的论文配置，或 image_size=32 的旧版配置。")
 
 
 class Generator(nn.Module):
     """
-    cDCGAN generator from Liu et al. (2022).
+    Liu 等人论文中的 cDCGAN 生成器。
 
-    Inputs are the desired transmission response M and uniform random noise R.
-    Output channels N represent geometry patterns in the compressed metacell.
+    输入是目标透射响应 M 和均匀噪声 R，输出是压缩后的几何图案。
     """
 
     def __init__(
@@ -109,10 +108,9 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
     """
-    cDCGAN discriminator conditioned on transmission response and geometry.
+    条件判别器。
 
-    It follows the paper's five convolutional channel stages:
-    64 -> 128 -> 256 -> 512 -> N, then a scalar real/fake output.
+    输入为几何图案和透射响应，卷积通道按论文设置为 64 -> 128 -> 256 -> 512 -> N。
     """
 
     def __init__(
@@ -137,7 +135,7 @@ class Discriminator(nn.Module):
     def forward(self, geometry: torch.Tensor, condition: torch.Tensor) -> torch.Tensor:
         b, _, h, w = geometry.shape
         if h != self.image_size or w != self.image_size:
-            raise ValueError(f"Geometry size should be {self.image_size}x{self.image_size}, got {h}x{w}.")
+            raise ValueError(f"几何图案尺寸应为 {self.image_size}x{self.image_size}，当前为 {h}x{w}。")
 
         cond = self.condition_map(condition).view(b, 1, self.image_size, self.image_size)
         x = torch.cat([geometry, cond], dim=1)

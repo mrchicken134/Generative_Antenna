@@ -8,15 +8,15 @@ PAPER_FULL_SIZE = 30
 
 
 def enforce_diagonal_symmetry(quarter: np.ndarray) -> np.ndarray:
-    """Average each upper-left quarter with its transpose to encode dual-polarization symmetry."""
+    """把左上角矩阵处理成关于对角线对称。"""
     arr = np.asarray(quarter, dtype=np.float32)
     if arr.shape[-1] != arr.shape[-2]:
-        raise ValueError(f"Expected square quarter matrices, got shape {arr.shape}.")
+        raise ValueError(f"左上角图案应为方阵，当前形状为 {arr.shape}。")
     return 0.5 * (arr + np.swapaxes(arr, -1, -2))
 
 
 def apply_outer_rim_to_quarter(quarter: np.ndarray) -> np.ndarray:
-    """Force the outer metacell rim to void in the compressed upper-left representation."""
+    """论文中单元最外圈留空，这里先处理压缩表示里的上边和左边。"""
     arr = np.array(quarter, dtype=np.float32, copy=True)
     arr[..., 0, :] = 0.0
     arr[..., :, 0] = 0.0
@@ -29,15 +29,13 @@ def binarize_geometry(probability: np.ndarray, threshold: float = 0.5) -> np.nda
 
 def expand_sandwich_channels(geometry: np.ndarray) -> np.ndarray:
     """
-    Convert paper cDCGAN output channels into physical triple-layer channels.
+    把网络输出通道展开成实际三层结构。
 
-    N=1 means the same pattern is used on all three layers.
-    N=2 means a sandwich metacell: top/bottom share channel 0 and middle uses channel 1.
-    N=3 is already a full triple-layer representation.
+    N=1 时三层共用一个图案；N=2 时上下层共用第 0 通道，中间层使用第 1 通道。
     """
     arr = np.asarray(geometry, dtype=np.float32)
     if arr.ndim < 3:
-        raise ValueError(f"Expected [..., channels, height, width], got shape {arr.shape}.")
+        raise ValueError(f"几何数据应至少包含 [通道, 高, 宽]，当前形状为 {arr.shape}。")
 
     channels = arr.shape[-3]
     if channels == 1:
@@ -46,15 +44,14 @@ def expand_sandwich_channels(geometry: np.ndarray) -> np.ndarray:
         return np.concatenate([arr[..., :1, :, :], arr[..., 1:2, :, :], arr[..., :1, :, :]], axis=-3)
     if channels == 3:
         return arr
-    raise ValueError("Paper reconstruction supports N=1, N=2, or explicit 3-layer geometry.")
+    raise ValueError("三层重构只支持 N=1、N=2，或已经展开好的 N=3。")
 
 
 def reconstruct_full_metacell(quarter_geometry: np.ndarray, threshold: float | None = None) -> np.ndarray:
     """
-    Reconstruct full 30x30 triple-layer metacells from 15x15 upper-left quarters.
+    从 15x15 的左上角图案恢复完整 30x30 三层单元。
 
-    The reconstruction applies the paper's prior knowledge: diagonal symmetry inside the
-    quarter, horizontal/vertical mirror symmetry over the full cell, and a void outer rim.
+    这里用的是论文中的对称先验：先做对角线对称，再沿水平和垂直方向镜像。
     """
     quarter = np.asarray(quarter_geometry, dtype=np.float32)
     thresholded = threshold is not None
@@ -62,8 +59,8 @@ def reconstruct_full_metacell(quarter_geometry: np.ndarray, threshold: float | N
         quarter = binarize_geometry(quarter, threshold)
     if quarter.shape[-2:] != (PAPER_QUARTER_SIZE, PAPER_QUARTER_SIZE):
         raise ValueError(
-            f"Expected quarter geometry size {(PAPER_QUARTER_SIZE, PAPER_QUARTER_SIZE)}, "
-            f"got {quarter.shape[-2:]}."
+            f"左上角图案尺寸应为 {(PAPER_QUARTER_SIZE, PAPER_QUARTER_SIZE)}，"
+            f"当前为 {quarter.shape[-2:]}。"
         )
 
     quarter = apply_outer_rim_to_quarter(enforce_diagonal_symmetry(quarter))

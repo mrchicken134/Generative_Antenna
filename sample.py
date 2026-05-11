@@ -9,13 +9,13 @@ from models import Generator
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Sample metacell geometries from a trained PK-cDCGAN generator.")
-    parser.add_argument("--ckpt", type=str, required=True, help="Checkpoint .pt path.")
-    parser.add_argument("--num_samples", type=int, default=8, help="Sample count when no condition file is provided.")
-    parser.add_argument("--condition_path", type=str, default="", help="Optional .npy conditions with shape [K, M].")
-    parser.add_argument("--output_path", type=str, default="generated_metacells.npz", help="Output .npz or .npy path.")
-    parser.add_argument("--threshold", type=float, default=0.5, help="Threshold for binary geometry export.")
-    parser.add_argument("--seed", type=int, default=123, help="Random seed.")
+    parser = argparse.ArgumentParser(description="用训练好的 PK-cDCGAN 生成超构单元图案。")
+    parser.add_argument("--ckpt", type=str, required=True, help="checkpoint .pt 文件路径。")
+    parser.add_argument("--num_samples", type=int, default=8, help="未提供条件文件时的生成数量。")
+    parser.add_argument("--condition_path", type=str, default="", help="可选条件向量 .npy 文件，形状为 [K, M]。")
+    parser.add_argument("--output_path", type=str, default="generated_metacells.npz", help="输出 .npz 或 .npy 路径。")
+    parser.add_argument("--threshold", type=float, default=0.5, help="导出二值图案时使用的阈值。")
+    parser.add_argument("--seed", type=int, default=123, help="随机种子。")
     return parser.parse_args()
 
 
@@ -43,7 +43,7 @@ def main(args: argparse.Namespace) -> None:
     if args.condition_path:
         cond_np = np.load(args.condition_path).astype(np.float32)
         if cond_np.ndim != 2 or cond_np.shape[1] != condition_dim:
-            raise ValueError(f"Condition file should have shape [K, {condition_dim}], got {cond_np.shape}.")
+            raise ValueError(f"条件文件形状应为 [K, {condition_dim}]，当前为 {cond_np.shape}。")
         cond = torch.from_numpy(cond_np).to(device)
     else:
         cond = torch.rand(args.num_samples, condition_dim, device=device)
@@ -69,8 +69,8 @@ def main(args: argparse.Namespace) -> None:
             conditions=cond.cpu().numpy(),
         )
 
-    print(f"Generated metacells saved to: {output_path.resolve()}")
-    print(f"Quarter probability shape: {quarter_probability.shape}")
+    print(f"生成结果已保存到：{output_path.resolve()}")
+    print(f"左上角概率图形状：{quarter_probability.shape}")
 
 
 if __name__ == "__main__":

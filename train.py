@@ -13,47 +13,47 @@ from models import Discriminator, Generator
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Train the Liu et al. 2022 PK-cDCGAN metacell generator.")
+    parser = argparse.ArgumentParser(description="训练 Liu 等人论文中的 PK-cDCGAN 超构单元生成器。")
 
-    parser.add_argument("--dataset_npz", type=str, default="", help="HFSS/simulation dataset in npz format.")
+    parser.add_argument("--dataset_npz", type=str, default="", help="HFSS 或其他仿真得到的 npz 数据集。")
     parser.add_argument(
         "--use_synthetic_if_missing",
         action="store_true",
-        help="Generate paper-shaped synthetic data when --dataset_npz is not provided.",
+        help="没有提供真实数据时，生成一份合成数据用于跑通流程。",
     )
-    parser.add_argument("--synthetic_path", type=str, default="synthetic_metacell.npz", help="Synthetic data path.")
-    parser.add_argument("--synthetic_samples", type=int, default=6000, help="Synthetic sample count.")
+    parser.add_argument("--synthetic_path", type=str, default="synthetic_metacell.npz", help="合成数据保存路径。")
+    parser.add_argument("--synthetic_samples", type=int, default=6000, help="合成数据样本数。")
 
-    parser.add_argument("--condition_dim", type=int, default=64, help="M: desired transmission response dimension.")
-    parser.add_argument("--noise_dim", type=int, default=32, help="R: uniform random noise dimension.")
+    parser.add_argument("--condition_dim", type=int, default=64, help="M：目标透射响应向量维度。")
+    parser.add_argument("--noise_dim", type=int, default=32, help="R：均匀随机噪声维度。")
     parser.add_argument(
         "--geometry_channels",
         type=int,
         default=2,
-        help="N: 1 for identical triple layers, 2 for sandwich top/bottom + middle patterns.",
+        help="N：1 表示三层同图案，2 表示上下层同图案、中间层单独图案。",
     )
-    parser.add_argument("--image_size", type=int, default=PAPER_QUARTER_SIZE, help="Compressed geometry size.")
-    parser.add_argument("--freq_min", type=float, default=8.0, help="Frequency range lower bound for metadata.")
-    parser.add_argument("--freq_max", type=float, default=13.0, help="Frequency range upper bound for metadata.")
+    parser.add_argument("--image_size", type=int, default=PAPER_QUARTER_SIZE, help="压缩几何图案尺寸。")
+    parser.add_argument("--freq_min", type=float, default=8.0, help="频段下限，只作为实验记录。")
+    parser.add_argument("--freq_max", type=float, default=13.0, help="频段上限，只作为实验记录。")
     parser.add_argument(
         "--no_paper_prior",
         action="store_true",
-        help="Do not enforce diagonal symmetry and void rim while loading 15x15 data.",
+        help="读取 15x15 数据时不再强制对角对称和外圈留空。",
     )
 
-    parser.add_argument("--epochs", type=int, default=200, help="Training epochs.")
-    parser.add_argument("--batch_size", type=int, default=64, help="Batch size.")
-    parser.add_argument("--lr", type=float, default=2e-4, help="Adam learning rate used in the paper.")
+    parser.add_argument("--epochs", type=int, default=200, help="训练轮数。")
+    parser.add_argument("--batch_size", type=int, default=64, help="批大小。")
+    parser.add_argument("--lr", type=float, default=2e-4, help="Adam 学习率，论文中为 2e-4。")
     parser.add_argument("--beta1", type=float, default=0.5, help="Adam beta1.")
     parser.add_argument("--beta2", type=float, default=0.999, help="Adam beta2.")
-    parser.add_argument("--seed", type=int, default=42, help="Random seed.")
-    parser.add_argument("--num_workers", type=int, default=0, help="DataLoader worker count.")
+    parser.add_argument("--seed", type=int, default=42, help="随机种子。")
+    parser.add_argument("--num_workers", type=int, default=0, help="DataLoader 进程数。")
 
-    parser.add_argument("--out_dir", type=str, default="outputs", help="Output directory.")
-    parser.add_argument("--save_every", type=int, default=20, help="Checkpoint interval.")
-    parser.add_argument("--sample_every", type=int, default=10, help="Sample export interval.")
-    parser.add_argument("--sample_count", type=int, default=16, help="Generated samples per export.")
-    parser.add_argument("--sample_threshold", type=float, default=0.5, help="Threshold for binary metacell export.")
+    parser.add_argument("--out_dir", type=str, default="outputs", help="输出目录。")
+    parser.add_argument("--save_every", type=int, default=20, help="checkpoint 保存间隔。")
+    parser.add_argument("--sample_every", type=int, default=10, help="生成样本保存间隔。")
+    parser.add_argument("--sample_count", type=int, default=16, help="每次保存的生成样本数。")
+    parser.add_argument("--sample_threshold", type=float, default=0.5, help="导出二值图案时使用的阈值。")
     return parser.parse_args()
 
 
@@ -74,7 +74,7 @@ def build_dataloader(args: argparse.Namespace) -> DataLoader:
         )
     else:
         if not args.use_synthetic_if_missing:
-            raise FileNotFoundError("Dataset not found. Provide --dataset_npz or add --use_synthetic_if_missing.")
+            raise FileNotFoundError("未找到数据集。请提供 --dataset_npz，或添加 --use_synthetic_if_missing。")
 
         cfg = SyntheticConfig(
             num_samples=args.synthetic_samples,
@@ -92,9 +92,9 @@ def build_dataloader(args: argparse.Namespace) -> DataLoader:
     resp_dim = dataset.responses.shape[1]
     expected_geo_shape = (args.geometry_channels, args.image_size, args.image_size)
     if geo_shape != expected_geo_shape:
-        raise ValueError(f"Dataset geometry shape should be {expected_geo_shape}, got {geo_shape}.")
+        raise ValueError(f"数据集几何形状应为 {expected_geo_shape}，当前为 {geo_shape}。")
     if resp_dim != args.condition_dim:
-        raise ValueError(f"Dataset response dimension should be {args.condition_dim}, got {resp_dim}.")
+        raise ValueError(f"响应向量维度应为 {args.condition_dim}，当前为 {resp_dim}。")
 
     return DataLoader(
         dataset,
@@ -228,7 +228,7 @@ def train(args: argparse.Namespace) -> None:
             torch.save(ckpt, out_dir / f"ckpt_epoch_{epoch:04d}.pt")
 
     np.save(out_dir / "loss_history.npy", np.array(history, dtype=np.float32))
-    print(f"Training complete. Results saved to: {out_dir.resolve()}")
+    print(f"训练完成，结果已保存到：{out_dir.resolve()}")
 
 
 if __name__ == "__main__":
